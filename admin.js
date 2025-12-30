@@ -27,8 +27,7 @@ const createFileBtn = document.getElementById('create-file-btn');
 const deleteBtn = document.getElementById('delete-btn');
 const fileEditorForm = document.getElementById('file-editor-form');
 const closeEditorBtn = document.getElementById('close-editor-btn');
-const publishCommandOutput = document.getElementById('publish-command-output');
-
+const publishBtn = document.getElementById('publish-btn');
 
 // In-memory representation of the file system
 let fileSystem = {};
@@ -158,15 +157,36 @@ function getParentForNewItem() {
 }
 
 /**
- * Generates the command to publish changes and displays it.
+ * Sends the updated file system data to the PHP server to be published.
  */
-function generatePublishCommand() {
-    const fileContent = `export const fileSystemData = ${JSON.stringify(fileSystem, null, 4)};`;
-    const escapedContent = fileContent.replaceAll("'''", "''\'");
-    const command = `print(default_api.write_file(path='content-data.js', content='''${escapedContent}'''))`;
-    publishCommandOutput.value = command;
-    publishCommandOutput.select();
+async function publishChanges() {
+    const content = JSON.stringify(fileSystem, null, 4);
+
+    const formData = new URLSearchParams();
+    formData.append('content', content);
+
+    try {
+        const response = await fetch('publish.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert('Success: ' + result.message);
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Publishing error:', error);
+        alert('A critical error occurred while trying to publish. Make sure your PHP server is running and accessible.');
+    }
 }
+
 
 // --- Event Listeners ---
 
@@ -180,8 +200,7 @@ createFolderBtn.addEventListener('click', () => {
         }
         parentNode[folderName] = {};
         renderExplorer();
-        generatePublishCommand(); // Also generate on structural changes
-        alert('Folder created. Publish command updated.');
+        alert('Folder created. Remember to publish your changes.');
     }
 });
 
@@ -195,8 +214,7 @@ createFileBtn.addEventListener('click', () => {
         }
         parentNode[fileName] = { content: '<p>New file content...</p>' };
         renderExplorer();
-        generatePublishCommand(); // Also generate on structural changes
-        alert('File created. Publish command updated.');
+        alert('File created. Remember to publish your changes.');
     }
 });
 
@@ -218,8 +236,7 @@ deleteBtn.addEventListener('click', () => {
             }
             selectedPath = null;
             renderExplorer();
-            generatePublishCommand(); // Also generate on structural changes
-            alert('Item deleted. Publish command updated.');
+            alert('Item deleted. Remember to publish your changes.');
         }
     }
 });
@@ -234,14 +251,14 @@ fileEditorForm.addEventListener('submit', (e) => {
     const node = getNode(pathToSave);
     if (node) {
         node.content = quill.root.innerHTML;
-        generatePublishCommand();
-        alert(`Content for "${pathToSave}" saved successfully! Publish command is updated.`);
+        alert(`Content for "${pathToSave}" saved successfully! Remember to publish your changes.`);
     } else {
         alert('Error: Could not find the file to save.');
     }
 });
 
 closeEditorBtn.addEventListener('click', closeEditor);
+publishBtn.addEventListener('click', publishChanges);
 
 // Initial Load
 loadFileSystem();
