@@ -23,10 +23,22 @@ const publishBtn = document.getElementById('publish-btn');
 const saveFileBtn = document.getElementById('file-editor-form');
 const backToExplorerBtn = document.getElementById('back-to-explorer-btn');
 
-// --- Quill Editor Initialization ---
+// --- Quill Editor Initialization (with full toolbar) ---
 const quill = new Quill('#editor', {
     theme: 'snow',
-    modules: { toolbar: [/* ... full toolbar options ... */] }
+    modules: {
+        toolbar: [
+            [{ 'font': [] }, { 'size': ['small', false, 'large', 'huge'] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'script': 'sub'}, { 'script': 'super' }],
+            [{ 'header': 1 }, { 'header': 2 }, 'blockquote', 'code-block'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
+            [{ 'direction': 'rtl' }, { 'align': [] }],
+            ['link', 'image', 'video', 'formula'],
+            ['clean']
+        ]
+    }
 });
 
 // --- UI View Management ---
@@ -102,12 +114,18 @@ function navigateBack() {
 
 function navigateToPath(path) {
     const node = getNode(path);
-    if (node && typeof node === 'object' && !node.hasOwnProperty('content')) {
+    if (!node) {
+        alert('Invalid path.');
+        pathInput.value = currentPath; // Reset to the last valid path
+        return;
+    }
+
+    const isFolder = typeof node === 'object' && !node.hasOwnProperty('content');
+    if (isFolder) {
         currentPath = path;
         renderExplorer();
     } else {
-        alert('Invalid directory path.');
-        pathInput.value = currentPath; // Reset to valid path
+        openEditorForFile(path);
     }
 }
 
@@ -141,7 +159,7 @@ function openEditorForFile(path) {
 pathInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
         e.preventDefault();
-        navigateToPath(e.target.value);
+        navigateToPath(e.target.value.trim());
     }
 });
 

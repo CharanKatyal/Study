@@ -188,7 +188,7 @@ button:active { transform: translateY(0); box-shadow: none; }
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-    height: 100%;
+    height: 100%; /* Ensure form takes full height */
 }
 
 #current-path-display {
@@ -199,23 +199,34 @@ button:active { transform: translateY(0); box-shadow: none; }
     border-radius: 8px;
     margin-bottom: 15px;
     background-color: var(--explorer-bg);
+    flex-shrink: 0; /* Prevent this from shrinking */
+}
+
+#editor {
+    display: flex;
+    flex-direction: column;
+    height: auto; /* Let it be flexible */
+    flex-grow: 1; /* Allow the editor to take up available space */
+    overflow: hidden; /* Prevent its content from overflowing */
 }
 
 .ql-container.ql-snow {
     flex-grow: 1;
+    overflow-y: auto; /* Allow the text area to scroll */
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
 }
 
 .ql-toolbar.ql-snow {
+    flex-shrink: 0; /* Prevent toolbar from shrinking */
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
 }
 
-#editor {
-    height: auto; 
+#editor-controls {
     display: flex;
-    flex-direction: column;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 15px;
+    flex-shrink: 0; /* Prevent controls from shrinking */
 }
-
-#editor-controls { display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px;}
