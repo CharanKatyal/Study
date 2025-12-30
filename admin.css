@@ -64,7 +64,7 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
-    flex: 1; 
+    box-sizing: border-box;
 }
 
 #editor-section.hidden {
@@ -179,8 +179,6 @@ button:active { transform: translateY(0); box-shadow: none; }
 
 /* --- Editor --- */
 #editor-section {
-    display: flex;
-    flex-direction: column;
     padding: 15px;
 }
 
@@ -188,10 +186,11 @@ button:active { transform: translateY(0); box-shadow: none; }
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-    overflow: hidden; /* Prevent the form itself from overflowing */
+    overflow: hidden; /* crucial for child flex-grow to work properly */
 }
 
 #current-path-display {
+    flex-shrink: 0;
     font-size: 1.2em;
     font-weight: 500;
     padding: 10px;
@@ -199,33 +198,34 @@ button:active { transform: translateY(0); box-shadow: none; }
     border-radius: 8px;
     margin-bottom: 15px;
     background-color: var(--explorer-bg);
-    flex-shrink: 0; /* Prevent this from shrinking */
 }
 
+/* The container for the Quill editor */
 #editor {
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
-    flex-grow: 1; /* Allow the editor wrapper to take up available space */
-    overflow: hidden; /* Prevent its content from overflowing its container */
-}
-
-.ql-container.ql-snow {
-    flex-grow: 1;
-    overflow-y: auto; /* Allow ONLY the text area to scroll */
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
+    overflow: hidden; /* Hide overflow from the editor itself */
+    min-height: 0; /* THE CRITICAL FIX: Allows the editor to shrink */
 }
 
 .ql-toolbar.ql-snow {
-    flex-shrink: 0; /* Prevent toolbar from shrinking */
+    flex-shrink: 0;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
 }
 
+.ql-container.ql-snow {
+    flex-grow: 1;
+    overflow-y: auto;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
 #editor-controls {
+    flex-shrink: 0;
     display: flex;
     gap: 10px;
     justify-content: flex-end;
     margin-top: 15px;
-    flex-shrink: 0; /* Prevent controls from shrinking or being pushed out */
 }
