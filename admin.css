@@ -188,7 +188,7 @@ button:active { transform: translateY(0); box-shadow: none; }
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-    height: 100%; /* Ensure form takes full height */
+    overflow: hidden; /* Prevent the form itself from overflowing */
 }
 
 #current-path-display {
@@ -205,14 +205,13 @@ button:active { transform: translateY(0); box-shadow: none; }
 #editor {
     display: flex;
     flex-direction: column;
-    height: auto; /* Let it be flexible */
-    flex-grow: 1; /* Allow the editor to take up available space */
-    overflow: hidden; /* Prevent its content from overflowing */
+    flex-grow: 1; /* Allow the editor wrapper to take up available space */
+    overflow: hidden; /* Prevent its content from overflowing its container */
 }
 
 .ql-container.ql-snow {
     flex-grow: 1;
-    overflow-y: auto; /* Allow the text area to scroll */
+    overflow-y: auto; /* Allow ONLY the text area to scroll */
     border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
 }
@@ -228,5 +227,5 @@ button:active { transform: translateY(0); box-shadow: none; }
     gap: 10px;
     justify-content: flex-end;
     margin-top: 15px;
-    flex-shrink: 0; /* Prevent controls from shrinking */
+    flex-shrink: 0; /* Prevent controls from shrinking or being pushed out */
 }
