@@ -1,104 +1,109 @@
+// The file system data is now loaded from the global window object, 
+// injected by the server-side index.php script.
+const fileSystem = window.fileSystemData;
 
-import { fileSystemData } from './content-data.js';
-
-const sidebarContent = document.getElementById('sidebar-content');
+// DOM Elements
+const explorerView = document.getElementById('explorer-view');
 const contentTitle = document.getElementById('content-title');
 const contentBody = document.getElementById('content-body');
-const welcomeMessage = document.getElementById('welcome-message');
-const contentDisplay = document.getElementById('content-display');
 
 /**
- * Recursively builds the navigation menu from the file system data.
+ * Renders the file explorer view.
+ * It sorts entries to show folders first, then files, both alphabetically.
  */
-function buildNavMenu(parentObject, parentElement) {
-    const sortedEntries = Object.entries(parentObject).sort((a, b) => {
-        const aIsFolder = typeof a[1] === 'object' && !a[1].hasOwnProperty('content');
-        const bIsFolder = typeof b[1] === 'object' && !b[1].hasOwnProperty('content');
-        if (aIsFolder && !bIsFolder) return -1;
-        if (!aIsFolder && bIsFolder) return 1;
-        return a[0].localeCompare(b[0]);
-    });
+function renderExplorer() {
+    explorerView.innerHTML = ''; // Clear the existing view
 
-    for (const [name, node] of sortedEntries) {
-        const isFolder = typeof node === 'object' && !node.hasOwnProperty('content');
-        const path = parentElement.dataset.path ? `${parentElement.dataset.path}/${name}` : name;
+    function renderLevel(parentObject, pathPrefix) {
+        const container = document.createElement('div');
+        if (pathPrefix) {
+            container.style.paddingLeft = '20px';
+        }
 
-        const navItem = document.createElement('div');
-        navItem.className = isFolder ? 'nav-folder' : 'nav-file';
-        navItem.dataset.path = path;
+        // Sort entries: folders first, then files, both alphabetically
+        const sortedEntries = Object.entries(parentObject).sort((a, b) => {
+            const aIsFolder = typeof a[1] === 'object' && !a[1].hasOwnProperty('content');
+            const bIsFolder = typeof b[1] === 'object' && !b[1].hasOwnProperty('content');
 
-        const itemHeader = document.createElement('div');
-        itemHeader.className = 'nav-item';
-        itemHeader.innerHTML = `
-            <i class="fas ${isFolder ? 'fa-folder' : 'fa-file-alt'}"></i>
-            <span>${name}</span>
-        `;
+            if (aIsFolder && !bIsFolder) return -1; // a (folder) comes before b (file)
+            if (!aIsFolder && bIsFolder) return 1;  // b (folder) comes before a (file)
+            return a[0].localeCompare(b[0]);       // sort alphabetically
+        });
 
-        navItem.appendChild(itemHeader);
-        parentElement.appendChild(navItem);
+        for (const [name, node] of sortedEntries) {
+            const currentPath = pathPrefix ? `${pathPrefix}/${name}` : name;
+            const isFolder = typeof node === 'object' && !node.hasOwnProperty('content');
 
-        if (isFolder) {
-            itemHeader.addEventListener('click', () => {
-                navItem.classList.toggle('open');
+            const itemEl = document.createElement('div');
+            itemEl.className = 'explorer-item';
+            itemEl.dataset.path = currentPath;
+            itemEl.innerHTML = `
+                <i class="fas ${isFolder ? 'fa-folder' : 'fa-file-alt'}"></i>
+                <span>${name}</span>
+            `;
+
+            // Add a click listener to handle file selection
+            itemEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                handleFileSelection(currentPath);
             });
 
-            const childrenContainer = document.createElement('div');
-            childrenContainer.className = 'nav-children';
-            childrenContainer.dataset.path = path; 
-            navItem.appendChild(childrenContainer);
-            buildNavMenu(node, childrenContainer);
-        } else {
-            itemHeader.addEventListener('click', () => {
-                displayContent(path);
-                document.querySelectorAll('.nav-item.active').forEach(el => el.classList.remove('active'));
-                itemHeader.classList.add('active');
-            });
+            container.appendChild(itemEl);
+
+            // If the node is a folder, recursively render its contents
+            if (isFolder) {
+                container.appendChild(renderLevel(node, currentPath));
+            }
+        }
+        return container;
+    }
+
+    // Start rendering from the root of the file system
+    explorerView.appendChild(renderLevel(fileSystem, ''));
+}
+
+/**
+ * Handles the logic when a user clicks on a file in the explorer.
+ * @param {string} path - The path of the selected file.
+ */
+function handleFileSelection(path) {
+    const node = getNodeFromPath(path);
+    const isFolder = typeof node === 'object' && !node.hasOwnProperty('content');
+
+    // Only update the content view if a file is clicked, not a folder
+    if (node && !isFolder) {
+        contentTitle.innerHTML = `<i class="fas fa-file-alt"></i> ${path.split('/').pop()}`;
+        contentBody.innerHTML = node.content || '<p>This file is empty.</p>';
+
+        // Highlight the selected file in the explorer
+        document.querySelectorAll('.explorer-item').forEach(el => el.classList.remove('selected'));
+        const selectedEl = document.querySelector(`[data-path="${path}"]`);
+        if (selectedEl) {
+            selectedEl.classList.add('selected');
         }
     }
 }
 
 /**
- * Displays the content of a file in the main content area.
- */
-function displayContent(path) {
-    const node = getNodeFromPath(path);
-    if (node && node.content) {
-        welcomeMessage.classList.add('hidden');
-        contentDisplay.classList.remove('hidden');
-        contentTitle.textContent = path.split('/').pop();
-        contentBody.innerHTML = node.content;
-    } else {
-        welcomeMessage.classList.add('hidden');
-        contentDisplay.classList.remove('hidden');
-        contentTitle.textContent = 'Not Found';
-        contentBody.innerHTML = '<p>The selected file could not be found or has no content.</p>';
-    }
-}
-
-/**
- * Retrieves a node from the file system data using a path string.
+ * Retrieves a node (file or folder) from the file system using its path.
+ * @param {string} path - The path of the node to retrieve (e.g., "Class 1/Notes.md")
+ * @returns {object|null} The node object or null if not found.
  */
 function getNodeFromPath(path) {
+    if (!path) return null;
     const parts = path.split('/');
-    let current = fileSystemData;
+    let current = fileSystem;
     for (const part of parts) {
-        if (current && current[part]) {
+        if (current && typeof current === 'object' && current.hasOwnProperty(part)) {
             current = current[part];
         } else {
-            return null;
+            return null; // Path does not exist
         }
     }
     return current;
 }
 
-// Initial setup
-function initialize() {
-    if (Object.keys(fileSystemData).length > 0) {
-        buildNavMenu(fileSystemData, sidebarContent);
-    } else {
-        welcomeMessage.querySelector('p').textContent = 'No content has been published yet. Please use the admin panel to create and publish content.';
-    }
-}
-
-
-initialize();
+// --- Initial Load ---
+// Render the explorer as soon as the script loads.
+// The initial content is already rendered on the server.
+renderExplorer();
