@@ -25,7 +25,7 @@
             <section id="explorer-section">
                 <div class="explorer-header">
                     <button id="explorer-back-btn" title="Go back"><i class="fas fa-arrow-left"></i></button>
-                    <div id="explorer-path">/</div>
+                    <input type="text" id="explorer-path-input" placeholder="Enter path and press Enter...">
                 </div>
                 <div id="explorer-controls">
                     <button id="create-folder-btn"><i class="fas fa-folder-plus"></i> New Folder</button>

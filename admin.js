@@ -11,7 +11,7 @@ let selectedItem = { path: null, isFolder: false }; // The currently highlighted
 const explorerSection = document.getElementById('explorer-section');
 const editorSection = document.getElementById('editor-section');
 const explorerView = document.getElementById('explorer-view');
-const explorerPathDiv = document.getElementById('explorer-path');
+const pathInput = document.getElementById('explorer-path-input');
 const editorPathInput = document.getElementById('current-path-display');
 
 // --- Buttons ---
@@ -31,29 +31,29 @@ const quill = new Quill('#editor', {
 
 // --- UI View Management ---
 
-/** Switches the view to the file explorer. */
 function showExplorerView() {
     editorSection.classList.add('hidden');
-    explorerSection.classList.remove('hidden');
-    renderExplorer(); // Re-render the explorer for the current path
+    explorerSection.style.display = 'flex';
+    renderExplorer();
 }
 
-/** Switches the view to the file editor. */
 function showEditorView() {
-    explorerSection.classList.add('hidden');
+    explorerSection.style.display = 'none';
     editorSection.classList.remove('hidden');
 }
 
 // --- Core Navigation and Rendering ---
 
-/** Renders the files and folders for the current directory path. */
 function renderExplorer() {
-    explorerView.innerHTML = ''; // Clear previous content
-    explorerPathDiv.textContent = currentPath; // Update path display
-    selectedItem.path = null; // Deselect any item
+    pathInput.value = currentPath;
+    explorerView.innerHTML = '';
+    selectedItem.path = null;
 
     const currentNode = getNode(currentPath);
-    if (!currentNode || typeof currentNode !== 'object') return;
+    if (!currentNode || typeof currentNode !== 'object') {
+        explorerView.innerHTML = '<p>Path not found.</p>';
+        return;
+    }
 
     const sortedEntries = Object.entries(currentNode).sort((a, b) => {
         const aIsFolder = typeof a[1] === 'object' && !a[1].content;
@@ -77,7 +77,6 @@ function renderExplorer() {
     }
 }
 
-/** Handles single-clicking an item to select it. */
 function handleSelection(path, isFolder) {
     selectedItem = { path, isFolder };
     document.querySelectorAll('.explorer-item').forEach(el => el.classList.remove('selected'));
@@ -85,7 +84,6 @@ function handleSelection(path, isFolder) {
     if (selectedEl) selectedEl.classList.add('selected');
 }
 
-/** Handles double-clicking an item to navigate or open it. */
 function handleDoubleClick(path, isFolder) {
     if (isFolder) {
         currentPath = path;
@@ -95,7 +93,6 @@ function handleDoubleClick(path, isFolder) {
     }
 }
 
-/** Navigates one level up in the folder hierarchy. */
 function navigateBack() {
     if (currentPath === '/') return;
     const parts = currentPath.split('/').slice(0, -1);
@@ -103,31 +100,50 @@ function navigateBack() {
     renderExplorer();
 }
 
+function navigateToPath(path) {
+    const node = getNode(path);
+    if (node && typeof node === 'object' && !node.hasOwnProperty('content')) {
+        currentPath = path;
+        renderExplorer();
+    } else {
+        alert('Invalid directory path.');
+        pathInput.value = currentPath; // Reset to valid path
+    }
+}
+
 // --- File and Folder Data Manipulation ---
 
-/** Retrieves a node (file or folder object) from the fileSystem based on its full path. */
 function getNode(path) {
     if (path === '/') return fileSystem;
-    const parts = path.split('/').slice(1);
+    const parts = path.startsWith('/') ? path.split('/').slice(1) : path.split('/');
     let current = fileSystem;
     for (const part of parts) {
+        if (part === '') continue;
         if (!current || !current.hasOwnProperty(part)) return null;
         current = current[part];
     }
     return current;
 }
 
-/** Opens the editor for a specific file path. */
 function openEditorForFile(path) {
     const node = getNode(path);
-    if (node && !node.hasOwnProperty('content')) return; // It's a folder
-
-    editorPathInput.value = path; // Show path in editor
-    quill.root.innerHTML = node.content || '';
-    showEditorView();
+    if (node && node.hasOwnProperty('content')) {
+        editorPathInput.value = path;
+        quill.root.innerHTML = node.content || '';
+        showEditorView();
+    } else {
+        alert('This item is not a file.');
+    }
 }
 
 // --- Event Listeners ---
+
+pathInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        navigateToPath(e.target.value);
+    }
+});
 
 backBtn.addEventListener('click', navigateBack);
 backToExplorerBtn.addEventListener('click', showExplorerView);
@@ -135,27 +151,25 @@ backToExplorerBtn.addEventListener('click', showExplorerView);
 createFolderBtn.addEventListener('click', () => {
     const folderName = prompt('Enter new folder name:');
     if (!folderName || !folderName.trim()) return;
-    
     const parentNode = getNode(currentPath);
-    if (parentNode[folderName]) {
+    if (parentNode && !parentNode[folderName]) {
+        parentNode[folderName] = {};
+        renderExplorer();
+    } else {
         alert('An item with this name already exists here.');
-        return;
     }
-    parentNode[folderName] = {};
-    renderExplorer();
 });
 
 createFileBtn.addEventListener('click', () => {
     const fileName = prompt('Enter new file name (e.g., about.txt):');
     if (!fileName || !fileName.trim()) return;
-
     const parentNode = getNode(currentPath);
-    if (parentNode[fileName]) {
+    if (parentNode && !parentNode[fileName]) {
+        parentNode[fileName] = { content: '<p>New file content...</p>' };
+        renderExplorer();
+    } else {
         alert('An item with this name already exists here.');
-        return;
     }
-    parentNode[fileName] = { content: '<p>New file content...</p>' };
-    renderExplorer();
 });
 
 deleteBtn.addEventListener('click', () => {
@@ -171,7 +185,7 @@ deleteBtn.addEventListener('click', () => {
 
         if (parentNode && parentNode.hasOwnProperty(nodeName)) {
             delete parentNode[nodeName];
-            renderExplorer(); // Refresh the view
+            renderExplorer();
         }
     }
 });
@@ -182,7 +196,7 @@ saveFileBtn.addEventListener('submit', (e) => {
     const node = getNode(path);
     if (node) {
         node.content = quill.root.innerHTML;
-        showExplorerView(); // Go back to explorer after saving
+        showExplorerView();
     } else {
         alert('Error: Could not find the file to save.');
     }
@@ -192,7 +206,6 @@ publishBtn.addEventListener('click', async () => {
     const content = JSON.stringify(fileSystem, null, 4);
     const formData = new URLSearchParams();
     formData.append('content', content);
-
     try {
         const response = await fetch('publish.php', { 
             method: 'POST', 
@@ -213,13 +226,12 @@ async function initializeAdminPanel() {
     try {
         const response = await fetch('content-data.js');
         const text = await response.text();
-        // This is a robust way to parse the JS file into a JSON object
         const jsonString = text.replace('export const fileSystemData = ', '').replace(/;\s*$/, '');
         fileSystem = JSON.parse(jsonString);
         showExplorerView();
     } catch (error) {
         console.error('Failed to load initial content data:', error);
-        explorerView.innerHTML = '<p style="color: red;">Error loading content data. Please check the console.</p>';
+        explorerView.innerHTML = '<p style="color: red;">Error loading content data.</p>';
     }
 }
 
