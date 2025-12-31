@@ -110,23 +110,29 @@ button:active { transform: translateY(0); box-shadow: none; }
     box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
 }
 
-/* --- Explorer --- */
-.explorer-header {
+/* --- Explorer & Editor Headers --- */
+.explorer-header, .editor-header {
     display: flex;
     align-items: center;
     gap: 15px;
     padding: 15px;
+}
+
+.explorer-header {
     border-bottom: 1px solid var(--border-color);
 }
 
-#explorer-back-btn {
+#explorer-back-btn, #editor-back-btn {
     background-color: #6c757d;
     box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    flex-shrink: 0; /* Prevent the button from shrinking */
 }
 
-#explorer-back-btn:hover { background-color: #5a6268; }
+#explorer-back-btn:hover, #editor-back-btn:hover {
+    background-color: #5a6268;
+}
 
-#explorer-path-input {
+#explorer-path-input, #current-path-display {
     font-size: 1.1em;
     font-family: inherit;
     font-weight: 500;
@@ -134,12 +140,12 @@ button:active { transform: translateY(0); box-shadow: none; }
     background-color: var(--explorer-bg);
     padding: 8px 12px;
     border-radius: 6px;
-    flex-grow: 1;
     border: 1px solid var(--border-color);
     transition: border-color 0.2s, box-shadow 0.2s;
+    flex-grow: 1;
 }
 
-#explorer-path-input:focus {
+#explorer-path-input:focus, #current-path-display:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px var(--button-hover-glow);
@@ -179,25 +185,14 @@ button:active { transform: translateY(0); box-shadow: none; }
 
 /* --- Editor --- */
 #editor-section {
-    padding: 15px;
+    padding: 0; /* Remove padding to make the header full-width */
 }
 
 #file-editor-form {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-    overflow: hidden; /* crucial for child flex-grow to work properly */
-}
-
-#current-path-display {
-    flex-shrink: 0;
-    font-size: 1.2em;
-    font-weight: 500;
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    margin-bottom: 15px;
-    background-color: var(--explorer-bg);
+    overflow: hidden;
 }
 
 /* The container for the Quill editor */
@@ -205,8 +200,9 @@ button:active { transform: translateY(0); box-shadow: none; }
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Hide overflow from the editor itself */
-    min-height: 0; /* THE CRITICAL FIX: Allows the editor to shrink */
+    overflow: hidden;
+    min-height: 0;
+    padding: 0 15px 15px 15px; /* Add padding around the editor itself */
 }
 
 .ql-toolbar.ql-snow {

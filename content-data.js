@@ -1,5 +1,9 @@
 export const fileSystemData = {
-    "Class 1": {},
+    "Class 1": {
+        "fdfds": {
+            "content": "<p>New file content...</p>"
+        }
+    },
     "Class 2": {},
     "Class 3": {},
     "Class 4": {},

@@ -41,7 +41,10 @@
             <!-- Editor View (initially hidden) -->
             <section id="editor-section" class="hidden">
                 <form id="file-editor-form">
-                    <input type="text" id="current-path-display" readonly>
+                    <div class="editor-header">
+                        <button type="button" id="editor-back-btn" title="Go to parent folder"><i class="fas fa-arrow-left"></i></button>
+                        <input type="text" id="current-path-display">
+                    </div>
                     <div id="editor"></div>
                     <div id="editor-controls">
                         <button type="submit" id="save-btn"><i class="fas fa-save"></i> Save File</button>

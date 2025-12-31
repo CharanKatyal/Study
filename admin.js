@@ -16,6 +16,7 @@ const editorPathInput = document.getElementById('current-path-display');
 
 // --- Buttons ---
 const backBtn = document.getElementById('explorer-back-btn');
+const editorBackBtn = document.getElementById('editor-back-btn'); // New button in editor
 const createFolderBtn = document.getElementById('create-folder-btn');
 const createFileBtn = document.getElementById('create-file-btn');
 const deleteBtn = document.getElementById('delete-btn');
@@ -123,7 +124,7 @@ function navigateToPath(path) {
     const isFolder = typeof node === 'object' && !node.hasOwnProperty('content');
     if (isFolder) {
         currentPath = path;
-        renderExplorer();
+        showExplorerView();
     } else {
         openEditorForFile(path);
     }
@@ -150,12 +151,13 @@ function openEditorForFile(path) {
         quill.root.innerHTML = node.content || '';
         showEditorView();
     } else {
-        alert('This item is not a file.');
+        alert('This item is not a file or does not exist.');
     }
 }
 
 // --- Event Listeners ---
 
+// Listener for the main explorer path input
 pathInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
         e.preventDefault();
@@ -163,7 +165,37 @@ pathInput.addEventListener('keydown', (e) => {
     }
 });
 
+// Listener for the new editor path input
+editorPathInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        navigateToPath(e.target.value.trim());
+    }
+});
+
 backBtn.addEventListener('click', navigateBack);
+
+// New listener for the back button in the editor view
+editorBackBtn.addEventListener('click', () => {
+    const path = editorPathInput.value;
+    if (!path) return;
+    const parts = path.split('/');
+    parts.pop(); // Remove the file name to get the parent folder
+    const parentPath = parts.join('/') || '/';
+    
+    // In case the path was just '/filename.txt'
+    if (parentPath === '/' && parts.length > 1) {
+         currentPath = parts.join('/');
+    } else if (parentPath === '' && parts.length <=1) {
+        currentPath = '/';
+    }
+    else {
+        currentPath = parentPath;
+    }
+
+    showExplorerView();
+});
+
 backToExplorerBtn.addEventListener('click', showExplorerView);
 
 createFolderBtn.addEventListener('click', () => {
@@ -179,7 +211,7 @@ createFolderBtn.addEventListener('click', () => {
 });
 
 createFileBtn.addEventListener('click', () => {
-    const fileName = prompt('Enter new file name (e.g., about.txt):');
+    const fileName = prompt('Enter new file name (e.g., about.md):');
     if (!fileName || !fileName.trim()) return;
     const parentNode = getNode(currentPath);
     if (parentNode && !parentNode[fileName]) {
@@ -214,6 +246,10 @@ saveFileBtn.addEventListener('submit', (e) => {
     const node = getNode(path);
     if (node) {
         node.content = quill.root.innerHTML;
+        // Navigate to the parent folder after saving
+        const parts = path.split('/');
+        parts.pop();
+        currentPath = parts.join('/') || '/';
         showExplorerView();
     } else {
         alert('Error: Could not find the file to save.');
@@ -242,14 +278,18 @@ publishBtn.addEventListener('click', async () => {
 
 async function initializeAdminPanel() {
     try {
-        const response = await fetch('content-data.js');
+        // Fetch the raw text of the JS file
+        const response = await fetch('content-data.js?t=' + new Date().getTime()); // Prevent caching
         const text = await response.text();
-        const jsonString = text.replace('export const fileSystemData = ', '').replace(/;\s*$/, '');
+        
+        // Clean the text to make it valid JSON
+        const jsonString = text.replace('export const fileSystemData =', '').replace(/;\s*$/, '');
+        
         fileSystem = JSON.parse(jsonString);
         showExplorerView();
     } catch (error) {
         console.error('Failed to load initial content data:', error);
-        explorerView.innerHTML = '<p style="color: red;">Error loading content data.</p>';
+        explorerView.innerHTML = '<p style="color: red;">Error loading content data. Please check the console.</p>';
     }
 }
 
