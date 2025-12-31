@@ -56,6 +56,7 @@
         </main>
     </div>
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill-image-resize-module@3.0.0/image-resize.min.js"></script>
     <script src="admin.js" type="module"></script>
 </body>
 </html>
