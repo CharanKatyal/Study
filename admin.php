@@ -8,8 +8,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <!-- Local Libraries -->
+    <link rel="stylesheet" href="Assets/Libraries/font-awesome.min.css">
+    <link href="Assets/Libraries/quill.snow.css" rel="stylesheet">
+    <link href="Assets/Libraries/katex.min.css" rel="stylesheet">
     <link rel="stylesheet" href="admin.css">
 </head>
 <body>
@@ -55,8 +57,10 @@
 
         </main>
     </div>
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/quill-image-resize-module@3.0.0/image-resize.min.js"></script>
+    <!-- Local Libraries -->
+    <script src="Assets/Libraries/quill.js"></script>
+    <script src="Assets/Libraries/quill-blot-formatter.min.js"></script>
+    <script src="Assets/Libraries/katex.min.js"></script>
     <script src="admin.js" type="module"></script>
 </body>
 </html>

@@ -1,296 +1,200 @@
 
-// This script powers a single-page file explorer and editor.
-// It manages the UI to switch between an explorer view and a text editor view.
+// A simple polling function to wait for global libraries that are not modules
+function waitForGlobals(globals) {
+    return new Promise((resolve, reject) => {
+        let attempts = 0;
+        const maxAttempts = 100; // Wait for a maximum of 10 seconds
 
-// --- Global State ---
-let fileSystem = {}; // In-memory copy of all file and folder data.
-let currentPath = '/'; // The current directory being viewed in the explorer.
-let selectedItem = { path: null, isFolder: false }; // The currently highlighted item.
-
-// --- DOM Elements ---
-const explorerSection = document.getElementById('explorer-section');
-const editorSection = document.getElementById('editor-section');
-const explorerView = document.getElementById('explorer-view');
-const pathInput = document.getElementById('explorer-path-input');
-const editorPathInput = document.getElementById('current-path-display');
-
-// --- Buttons ---
-const backBtn = document.getElementById('explorer-back-btn');
-const editorBackBtn = document.getElementById('editor-back-btn'); // New button in editor
-const createFolderBtn = document.getElementById('create-folder-btn');
-const createFileBtn = document.getElementById('create-file-btn');
-const deleteBtn = document.getElementById('delete-btn');
-const publishBtn = document.getElementById('publish-btn');
-const saveFileBtn = document.getElementById('file-editor-form');
-const backToExplorerBtn = document.getElementById('back-to-explorer-btn');
-
-// --- Quill Editor Initialization (with full toolbar) ---
-const quill = new Quill('#editor', {
-    theme: 'snow',
-    modules: {
-        toolbar: [
-            [{ 'font': [] }, { 'size': ['small', false, 'large', 'huge'] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'script': 'sub'}, { 'script': 'super' }],
-            [{ 'header': 1 }, { 'header': 2 }, 'blockquote', 'code-block'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
-            [{ 'direction': 'rtl' }, { 'align': [] }],
-            ['link', 'image', 'video', 'formula'],
-            ['clean']
-        ]
-    }
-});
-
-// --- UI View Management ---
-
-function showExplorerView() {
-    editorSection.classList.add('hidden');
-    explorerSection.style.display = 'flex';
-    renderExplorer();
-}
-
-function showEditorView() {
-    explorerSection.style.display = 'none';
-    editorSection.classList.remove('hidden');
-}
-
-// --- Core Navigation and Rendering ---
-
-function renderExplorer() {
-    pathInput.value = currentPath;
-    explorerView.innerHTML = '';
-    selectedItem.path = null;
-
-    const currentNode = getNode(currentPath);
-    if (!currentNode || typeof currentNode !== 'object') {
-        explorerView.innerHTML = '<p>Path not found.</p>';
-        return;
-    }
-
-    const sortedEntries = Object.entries(currentNode).sort((a, b) => {
-        const aIsFolder = typeof a[1] === 'object' && !a[1].content;
-        const bIsFolder = typeof b[1] === 'object' && !b[1].content;
-        if (aIsFolder !== bIsFolder) return aIsFolder ? -1 : 1;
-        return a[0].localeCompare(b[0]);
+        const check = () => {
+            // Check for BlotFormatter specifically
+            if (globals.every(g => window[g]) && window.QuillBlotFormatter) {
+                resolve();
+            } else {
+                attempts++;
+                if (attempts < maxAttempts) {
+                    setTimeout(check, 100); // Check every 100ms
+                } else {
+                    reject(new Error(`Timed out waiting for globals: ${globals.join(', ')}`))
+                }
+            }
+        };
+        check();
     });
-
-    for (const [name, node] of sortedEntries) {
-        const isFolder = typeof node === 'object' && !node.hasOwnProperty('content');
-        const itemPath = (currentPath === '/' ? '' : currentPath) + '/' + name;
-        
-        const itemEl = document.createElement('div');
-        itemEl.className = 'explorer-item';
-        itemEl.dataset.path = itemPath;
-        itemEl.innerHTML = `<i class="fas ${isFolder ? 'fa-folder' : 'fa-file-alt'}"></i><span>${name}</span>`;
-
-        itemEl.addEventListener('click', () => handleSelection(itemPath, isFolder));
-        itemEl.addEventListener('dblclick', () => handleDoubleClick(itemPath, isFolder));
-        explorerView.appendChild(itemEl);
-    }
 }
 
-function handleSelection(path, isFolder) {
-    selectedItem = { path, isFolder };
-    document.querySelectorAll('.explorer-item').forEach(el => el.classList.remove('selected'));
-    const selectedEl = document.querySelector(`[data-path="${path}"]`);
-    if (selectedEl) selectedEl.classList.add('selected');
-}
+// Main function to orchestrate the application startup
+async function main() {
+    try {
+        // Step 1: Wait for Quill and the new BlotFormatter library
+        await waitForGlobals(['Quill']);
 
-function handleDoubleClick(path, isFolder) {
-    if (isFolder) {
-        currentPath = path;
-        renderExplorer();
-    } else {
-        openEditorForFile(path);
-    }
-}
+        // Step 2: Dynamically import the file system data module.
+        const dataModule = await import(`./content-data.js?v=${new Date().getTime()}`);
+        let fileSystem = dataModule.fileSystemData;
 
-function navigateBack() {
-    if (currentPath === '/') return;
-    const parts = currentPath.split('/').slice(0, -1);
-    currentPath = parts.length > 1 ? parts.join('/') : '/';
-    renderExplorer();
-}
+        // --- DOM Elements ---
+        const explorerSection = document.getElementById('explorer-section');
+        const editorSection = document.getElementById('editor-section');
+        const explorerView = document.getElementById('explorer-view');
+        const pathInput = document.getElementById('explorer-path-input');
+        const editorPathInput = document.getElementById('current-path-display');
 
-function navigateToPath(path) {
-    const node = getNode(path);
-    if (!node) {
-        alert('Invalid path.');
-        pathInput.value = currentPath; // Reset to the last valid path
-        return;
-    }
+        // --- Buttons ---
+        const backBtn = document.getElementById('explorer-back-btn');
+        const editorBackBtn = document.getElementById('editor-back-btn');
+        const createFolderBtn = document.getElementById('create-folder-btn');
+        const createFileBtn = document.getElementById('create-file-btn');
+        const deleteBtn = document.getElementById('delete-btn');
+        const publishBtn = document.getElementById('publish-btn');
+        const saveFileBtn = document.getElementById('file-editor-form');
+        const backToExplorerBtn = document.getElementById('back-to-explorer-btn');
 
-    const isFolder = typeof node === 'object' && !node.hasOwnProperty('content');
-    if (isFolder) {
-        currentPath = path;
-        showExplorerView();
-    } else {
-        openEditorForFile(path);
-    }
-}
+        // --- Global State ---
+        let currentPath = '/';
+        let selectedItem = { path: null, isFolder: false };
 
-// --- File and Folder Data Manipulation ---
+        // --- Quill Editor Initialization with Blot Formatter for resizing ---
+        Quill.register('modules/blotFormatter', window.QuillBlotFormatter.default);
+        const quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'font': [] }, { 'size': ['small', false, 'large', 'huge'] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'script': 'sub'}, { 'script': 'super' }],
+                    [{ 'header': 1 }, { 'header': 2 }, 'blockquote', 'code-block'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
+                    [{ 'direction': 'rtl' }, { 'align': [] }],
+                    ['link', 'image', 'video', 'formula'],
+                    ['clean']
+                ],
+                blotFormatter: {
+                    // No options needed for basic image and video resizing
+                }
+            }
+        });
 
-function getNode(path) {
-    if (path === '/') return fileSystem;
-    const parts = path.startsWith('/') ? path.split('/').slice(1) : path.split('/');
-    let current = fileSystem;
-    for (const part of parts) {
-        if (part === '') continue;
-        if (!current || !current.hasOwnProperty(part)) return null;
-        current = current[part];
-    }
-    return current;
-}
-
-function openEditorForFile(path) {
-    const node = getNode(path);
-    if (node && node.hasOwnProperty('content')) {
-        editorPathInput.value = path;
-        quill.root.innerHTML = node.content || '';
-        showEditorView();
-    } else {
-        alert('This item is not a file or does not exist.');
-    }
-}
-
-// --- Event Listeners ---
-
-// Listener for the main explorer path input
-pathInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        navigateToPath(e.target.value.trim());
-    }
-});
-
-// Listener for the new editor path input
-editorPathInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        navigateToPath(e.target.value.trim());
-    }
-});
-
-backBtn.addEventListener('click', navigateBack);
-
-// New listener for the back button in the editor view
-editorBackBtn.addEventListener('click', () => {
-    const path = editorPathInput.value;
-    if (!path) return;
-    const parts = path.split('/');
-    parts.pop(); // Remove the file name to get the parent folder
-    const parentPath = parts.join('/') || '/';
-    
-    // In case the path was just '/filename.txt'
-    if (parentPath === '/' && parts.length > 1) {
-         currentPath = parts.join('/');
-    } else if (parentPath === '' && parts.length <=1) {
-        currentPath = '/';
-    }
-    else {
-        currentPath = parentPath;
-    }
-
-    showExplorerView();
-});
-
-backToExplorerBtn.addEventListener('click', showExplorerView);
-
-createFolderBtn.addEventListener('click', () => {
-    const folderName = prompt('Enter new folder name:');
-    if (!folderName || !folderName.trim()) return;
-    const parentNode = getNode(currentPath);
-    if (parentNode && !parentNode[folderName]) {
-        parentNode[folderName] = {};
-        renderExplorer();
-    } else {
-        alert('An item with this name already exists here.');
-    }
-});
-
-createFileBtn.addEventListener('click', () => {
-    const fileName = prompt('Enter new file name (e.g., about.md):');
-    if (!fileName || !fileName.trim()) return;
-    const parentNode = getNode(currentPath);
-    if (parentNode && !parentNode[fileName]) {
-        parentNode[fileName] = { content: '<p>New file content...</p>' };
-        renderExplorer();
-    } else {
-        alert('An item with this name already exists here.');
-    }
-});
-
-deleteBtn.addEventListener('click', () => {
-    if (!selectedItem.path) {
-        alert('Please select an item to delete.');
-        return;
-    }
-    if (confirm(`Are you sure you want to delete "${selectedItem.path}"?`)) {
-        const parts = selectedItem.path.split('/');
-        const nodeName = parts.pop();
-        const parentPath = parts.length > 1 ? parts.join('/') : '/';
-        const parentNode = getNode(parentPath);
-
-        if (parentNode && parentNode.hasOwnProperty(nodeName)) {
-            delete parentNode[nodeName];
+        // --- UI View Management ---
+        function showExplorerView() {
+            editorSection.classList.add('hidden');
+            explorerSection.style.display = 'flex';
             renderExplorer();
         }
-    }
-});
 
-saveFileBtn.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const path = editorPathInput.value;
-    const node = getNode(path);
-    if (node) {
-        node.content = quill.root.innerHTML;
-        // Navigate to the parent folder after saving
-        const parts = path.split('/');
-        parts.pop();
-        currentPath = parts.join('/') || '/';
+        function showEditorView() {
+            explorerSection.style.display = 'none';
+            editorSection.classList.remove('hidden');
+        }
+
+        // --- Core Navigation and Rendering ---
+        function renderExplorer() {
+            pathInput.value = currentPath;
+            explorerView.innerHTML = '';
+            selectedItem.path = null;
+            const currentNode = getNode(currentPath);
+            if (!currentNode || typeof currentNode !== 'object') {
+                explorerView.innerHTML = `<p style="color: orange;">Path not found: "${currentPath}".</p>`;
+                return;
+            }
+            const sortedEntries = Object.entries(currentNode).sort((a, b) => {
+                const aIsFolder = typeof a[1] === 'object' && !a[1].hasOwnProperty('content');
+                const bIsFolder = typeof b[1] === 'object' && !b[1].hasOwnProperty('content');
+                if (aIsFolder !== bIsFolder) return aIsFolder ? -1 : 1;
+                return a[0].localeCompare(b[0]);
+            });
+            if (sortedEntries.length === 0) {
+                explorerView.innerHTML = '<p>This folder is empty.</p>';
+            }
+            for (const [name, node] of sortedEntries) {
+                const isFolder = typeof node === 'object' && !node.hasOwnProperty('content');
+                const itemPath = (currentPath === '/' ? '' : currentPath) + '/' + name;
+                const itemEl = document.createElement('div');
+                itemEl.className = 'explorer-item';
+                itemEl.dataset.path = itemPath;
+                itemEl.innerHTML = `<i class="fas ${isFolder ? 'fa-folder' : 'fa-file-alt'}"></i><span>${name}</span>`;
+                itemEl.addEventListener('click', () => handleSelection(itemPath, isFolder));
+                itemEl.addEventListener('dblclick', () => handleDoubleClick(itemPath, isFolder));
+                explorerView.appendChild(itemEl);
+            }
+        }
+        function handleSelection(path, isFolder) {
+            selectedItem = { path, isFolder };
+            document.querySelectorAll('.explorer-item').forEach(el => el.classList.remove('selected'));
+            const selectedEl = document.querySelector(`[data-path="${path}"]`);
+            if (selectedEl) selectedEl.classList.add('selected');
+        }
+        function handleDoubleClick(path, isFolder) {
+            if (isFolder) {
+                currentPath = path;
+                renderExplorer();
+            } else {
+                openEditorForFile(path);
+            }
+        }
+        function navigateBack() {
+            if (currentPath === '/') return;
+            const parts = currentPath.split('/').slice(0, -1);
+            currentPath = parts.length > 1 ? parts.join('/') : '/';
+            renderExplorer();
+        }
+        function navigateToPath(path) {
+            const node = getNode(path);
+            if (!node) {
+                alert('Invalid path.');
+                pathInput.value = currentPath;
+                return;
+            }
+            const isFolder = typeof node === 'object' && !node.hasOwnProperty('content');
+            if (isFolder) {
+                currentPath = path;
+                showExplorerView();
+            } else {
+                openEditorForFile(path);
+            }
+        }
+        function getNode(path) {
+            if (path === '/') return fileSystem;
+            const parts = path.startsWith('/') ? path.split('/').slice(1) : path.split('/');
+            let current = fileSystem;
+            for (const part of parts) {
+                if (part === '') continue;
+                if (!current || !current.hasOwnProperty(part)) return null;
+                current = current[part];
+            }
+            return current;
+        }
+        function openEditorForFile(path) {
+            const node = getNode(path);
+            if (node && node.hasOwnProperty('content')) {
+                editorPathInput.value = path;
+                quill.root.innerHTML = node.content || '';
+                showEditorView();
+            } else {
+                alert('This item is not a file or does not exist.');
+            }
+        }
+        // --- Event Listeners ---
+        pathInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); navigateToPath(e.target.value.trim()); } });
+        editorPathInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); navigateToPath(e.target.value.trim()); } });
+        backBtn.addEventListener('click', navigateBack);
+        editorBackBtn.addEventListener('click', () => { const path = editorPathInput.value; if (!path) return; const parts = path.split('/'); parts.pop(); currentPath = parts.join('/') || '/'; showExplorerView(); });
+        backToExplorerBtn.addEventListener('click', showExplorerView);
+        createFolderBtn.addEventListener('click', () => { const folderName = prompt('Enter folder name:'); if (!folderName) return; const parentNode = getNode(currentPath); if (!parentNode[folderName]) { parentNode[folderName] = {}; renderExplorer(); } else { alert('Item exists.'); } });
+        createFileBtn.addEventListener('click', () => { const fileName = prompt('Enter file name:'); if (!fileName) return; const parentNode = getNode(currentPath); if (!parentNode[fileName]) { parentNode[fileName] = { content: '' }; renderExplorer(); } else { alert('Item exists.'); } });
+        deleteBtn.addEventListener('click', () => { if (!selectedItem.path || !confirm(`Delete "${selectedItem.path}"?`)) return; const parts = selectedItem.path.split('/'); const nodeName = parts.pop(); const parentNode = getNode(parts.join('/') || '/'); if (parentNode && parentNode.hasOwnProperty(nodeName)) { delete parentNode[nodeName]; renderExplorer(); } });
+        saveFileBtn.addEventListener('submit', (e) => { e.preventDefault(); const path = editorPathInput.value; const node = getNode(path); if (node) { node.content = quill.root.innerHTML; const parts = path.split('/'); parts.pop(); currentPath = parts.join('/') || '/'; showExplorerView(); } else { alert('Save error.'); } });
+        publishBtn.addEventListener('click', async () => { const formData = new URLSearchParams(); formData.append('content', JSON.stringify(fileSystem, null, 2)); try { const response = await fetch('publish.php', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: formData }); alert((await response.json()).message); } catch (error) { console.error('Publish error:', error); alert('Publish failed.'); } });
+
+        // --- Initial Render ---
         showExplorerView();
-    } else {
-        alert('Error: Could not find the file to save.');
-    }
-});
 
-publishBtn.addEventListener('click', async () => {
-    const content = JSON.stringify(fileSystem, null, 4);
-    const formData = new URLSearchParams();
-    formData.append('content', content);
-    try {
-        const response = await fetch('publish.php', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: formData
-        });
-        const result = await response.json();
-        alert(result.message);
     } catch (error) {
-        console.error('Publishing error:', error);
-        alert('A critical error occurred while publishing.');
-    }
-});
-
-// --- Initial Application Load ---
-
-async function initializeAdminPanel() {
-    try {
-        // Fetch the raw text of the JS file
-        const response = await fetch('content-data.js?t=' + new Date().getTime()); // Prevent caching
-        const text = await response.text();
-        
-        // Clean the text to make it valid JSON
-        const jsonString = text.replace('export const fileSystemData =', '').replace(/;\s*$/, '');
-        
-        fileSystem = JSON.parse(jsonString);
-        showExplorerView();
-    } catch (error) {
-        console.error('Failed to load initial content data:', error);
-        explorerView.innerHTML = '<p style="color: red;">Error loading content data. Please check the console.</p>';
+        console.error("Fatal startup error:", error);
+        const errorContainer = document.getElementById('explorer-view') || document.body;
+        errorContainer.innerHTML = `<p style="color: red; font-weight: bold;">Fatal Error: ${error.message}. Check console for details.</p>`;
     }
 }
 
-initializeAdminPanel();
+// --- Run the main application ---
+main();
