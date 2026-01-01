@@ -33,6 +33,8 @@
                     <button id="create-folder-btn"><i class="fas fa-folder-plus"></i> New Folder</button>
                     <button id="create-file-btn"><i class="fas fa-file-plus"></i> New File</button>
                     <button id="delete-btn"><i class="fas fa-trash-alt"></i> Delete</button>
+                    <button id="move-up-btn"><i class="fas fa-arrow-up"></i> Move Up</button>
+                    <button id="move-down-btn"><i class="fas fa-arrow-down"></i> Move Down</button>
                 </div>
                 <div id="explorer-view"></div>
                 <div id="publish-section">
