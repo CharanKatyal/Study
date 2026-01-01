@@ -1,14 +1,24 @@
-export const fileSystemData = {
-  "Class 1": {},
-  "Class 2": {},
-  "Class 3": {},
-  "Class 4": {},
-  "Class 5": {},
-  "Class 6": {},
-  "Class 7": {},
-  "Class 8": {},
-  "Class 9": {},
-  "Class 10": {},
-  "Class 11": {},
-  "Class 12": {}
+export const contentData = {
+    "class-1": {
+        "name": "Class 1",
+        "subjects": {
+            "math": {
+                "name": "Math",
+                "content": "<p>Welcome to Math class!</p>"
+            },
+            "english": {
+                "name": "English",
+                "content": "<p>Welcome to English class!</p>"
+            }
+        }
+    },
+    "class-2": {
+        "name": "Class 2",
+        "subjects": {
+            "science": {
+                "name": "Science",
+                "content": "<p>Welcome to Science class!</p>"
+            }
+        }
+    }
 };
