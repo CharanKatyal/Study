@@ -1,4 +1,13 @@
 <?php
+session_start();
+
+// If the user is not logged in, they cannot publish.
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    http_response_code(403); // Forbidden
+    echo json_encode(['status' => 'error', 'message' => 'Authentication required.']);
+    exit;
+}
+
 // Check if the request is a POST request and if the content is not empty
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['content'])) {
     // The content from the admin panel

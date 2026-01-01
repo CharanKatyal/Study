@@ -1,6 +1,11 @@
 <?php
-// This is a placeholder file. In a real-world scenario, you might have PHP logic here
-// to handle user sessions or other server-side tasks for the admin panel.
+session_start();
+
+// If the user is not logged in, redirect to the login page
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    header('Location: login.php');
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -18,6 +23,7 @@
     <div id="admin-container">
         <header id="admin-header">
             <h1>Content Management</h1>
+            <a href="logout.php" id="logout-btn" class="button"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </header>
 
         <!-- This main container will hold both views -->
