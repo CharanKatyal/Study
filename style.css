@@ -9,12 +9,18 @@
     --button-hover-glow: rgba(0, 123, 255, 0.35);
 }
 
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background-color: var(--background-color);
     color: var(--text-color);
-    margin: 0;
     line-height: 1.6;
+    display: flex;
+    flex-direction: column;
 }
 
 #main-header {
@@ -27,6 +33,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 1000;
+    flex-shrink: 0; /* Prevent header from shrinking */
 }
 
 #header-title {
@@ -61,6 +68,23 @@ body {
     padding: 2rem;
     max-width: 960px;
     margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+    flex-grow: 1; /* Allow container to grow */
+    display: flex; /* Use flexbox for the children */
+    flex-direction: column;
+}
+
+/* --- Views --- */
+#browser-view, #content-view {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#browser-view.hidden, #content-view.hidden {
+    display: none;
 }
 
 #items-container {
@@ -101,7 +125,6 @@ body {
 .item-class-11 i { color: #17a2b8; } /* Teal */
 .item-class-12 i { color: #6f42c1; } /* Purple */
 
-
 /* --- Content View --- */
 #content-view {
     background-color: var(--card-background);
@@ -109,9 +132,8 @@ body {
     padding: 2rem;
     box-shadow: 0 4px 12px var(--shadow-color);
     animation: fadeIn 0.5s ease;
+    overflow-y: auto; /* Allow content to scroll */
 }
-
-#content-view.hidden { display: none; }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }

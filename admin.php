@@ -13,10 +13,10 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel</title>
-    <!-- Local Libraries -->
-    <link rel="stylesheet" href="Assets/Libraries/font-awesome.min.css">
-    <link href="Assets/Libraries/quill.snow.css" rel="stylesheet">
-    <link href="Assets/Libraries/katex.min.css" rel="stylesheet">
+    <!-- CDN Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" rel="stylesheet">
     <link rel="stylesheet" href="admin.css">
 </head>
 <body>
@@ -65,10 +65,10 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 
         </main>
     </div>
-    <!-- Local Libraries -->
-    <script src="Assets/Libraries/quill.js"></script>
-    <script src="Assets/Libraries/quill-blot-formatter.min.js"></script>
-    <script src="Assets/Libraries/katex.min.js"></script>
+    <!-- CDN Libraries -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill-blot-formatter@1.0.5/dist/quill-blot-formatter.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script src="admin.js" type="module"></script>
 </body>
 </html>

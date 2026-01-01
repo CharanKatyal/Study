@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const icon = document.createElement('i');
             icon.className = `fas ${getIconClass(name, item)}`;
 
-            const buttonText = document.createTextNode(name.replace(/\.link$/, ''));
+            const buttonText = document.createTextNode(name.replace(/\.(link|txt)$/, ''));
 
             button.appendChild(icon);
             button.appendChild(buttonText);
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.open(item.content, '_blank');
                 } else {
                     navigationStack.push(path);
-                    renderContent(item.content);
+                    renderContent(item.content, name);
                 }
             });
 
@@ -80,11 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updateUI(path);
     }
 
-    function renderContent(content) {
+    function renderContent(content, name) {
         browserView.classList.add('hidden');
         contentView.classList.remove('hidden');
         postContent.innerHTML = content;
-        updateUI('Content');
+        updateUI(name);
     }
 
     function updateUI(path) {
@@ -94,7 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
             backBtn.classList.add('hidden');
         }
 
-        headerTitle.textContent = path === '/' ? 'Home' : path.split('/').pop();
+        const title = path === '/' ? 'Home' : path.split('/').pop();
+        headerTitle.textContent = title.replace(/\.(link|txt)$/, '');
     }
 
     backBtn.addEventListener('click', () => {

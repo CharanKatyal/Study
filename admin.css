@@ -153,7 +153,7 @@ body {
     box-sizing: border-box;
 }
 
-#editor-section.hidden {
+#explorer-section.hidden, #editor-section.hidden {
     display: none;
 }
 
@@ -310,4 +310,5 @@ button:active { transform: translateY(0); box-shadow: none; }
     gap: 10px;
     justify-content: flex-end;
     margin-top: 15px;
+    padding: 0 15px 15px 15px; /* Add padding to match the editor header */
 }
