@@ -23,6 +23,9 @@ A simple and engaging web application for kids to access study materials for dif
     *   A clean header with the app title.
 *   **Content Display:**
     *   When a class is selected, the app will display the relevant study materials in a clear and organized manner.
+*   **Responsive Views:**
+    *   On screens narrower than `1024px` (covering mobile and tablets), the app provides a full-screen, immersive reading experience by removing the container's padding and styling when content is viewed.
+    *   For portrait-oriented devices, a message with an animated icon prompts the user to rotate their device to landscape for a better experience.
 
 ### Admin Panel (`admin.php`, `admin.css`, `admin.js`) - **Phase 1 Complete**
 

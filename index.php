@@ -25,6 +25,12 @@
             <div id="post-content"></div>
         </section>
     </main>
+
+    <div id="orientation-message">
+        <i class="fas fa-mobile-alt"></i>
+        <p>Please rotate your device to landscape mode for the best experience.</p>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/katex@0.15.2/dist/katex.min.js"></script>
     <script src="main.js" type="module"></script>
 </body>
