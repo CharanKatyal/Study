@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     navigationStack.push(path);
                     render(path === '/' ? `/${name}` : `${path}/${name}`);
                 } else if (name.endsWith('.link')) {
-                    window.open(item.content, '_blank');
+                    window.open(item.content.replace(/<[^>]*>/g, ''), '_blank');
                 } else {
                     navigationStack.push(path);
                     renderContent(item.content, name);
