@@ -6,6 +6,7 @@
     <title>CK Hero Content</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.15.2/dist/katex.min.css">
 </head>
 <body>
     <header id="main-header">
@@ -24,7 +25,7 @@
             <div id="post-content"></div>
         </section>
     </main>
-
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.15.2/dist/katex.min.js"></script>
     <script src="main.js" type="module"></script>
 </body>
 </html>
